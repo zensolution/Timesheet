@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<title>Timesheet</title>
+<body onload="launch()">
+<script src="yaml.js" type="text/javascript"></script>
+<script src="fabric.js" type="text/javascript"></script>
+<script src="style.js" type="text/javascript"></script>
+<script src="utils.js" type="text/javascript"></script>
+<script src="timeline.js" type="text/javascript"></script>
+<script src="timelineCanvas.js" type="text/javascript"></script>
+<script>
+    function launch() {
+        return
+        var topMarkers = new Markers()
+        topMarkers.addMarker(new Marker('CTM Batch', '04/21/2024', 340))
+
+        var bottomMarkers = new Markers(200)
+        bottomMarkers.addMarker(new Marker('Spring Festival', '02/21/2024', 30))
+
+        var dsDevelopmentPhase = new Phase('DS\nDevelopment', ProjectDisplayPattern['green'])
+        var mi = new Milestone('GalNac Development', '03/01/2024', '03/25/2024', 'begin')
+        mi.addDateRange('03/27/2024', '04/21/2024')
+        dsDevelopmentPhase.addMilestone(mi)
+        dsDevelopmentPhase.addMilestone(new Milestone('Peptide Development', '03/01/2024', '03/25/2026'))
+        dsDevelopmentPhase.addMilestone(new Milestone('Peptide Development', '07/01/2024', '09/25/2024', true))
+
+        var timeline = new Timeline()
+        timeline.setTopMarkers(topMarkers)
+        timeline.setYearLabel(new YearLabel())
+        timeline.setMonthLabel(new MonthLabel())
+        timeline.addPhase(dsDevelopmentPhase)
+        timeline.setBottomMarkers(bottomMarkers)
+        timeline.addOpaqueMask('02/11/2024', '02/18/2024')
+
+        var canvas = new TimelineCanvas(1100, 130, '12/01/2023', '12/31/2025', timeline)
+        canvas.draw()
+    }
+
+    function getMarkers(ymlMarkers) {
+        var markers = new Markers()
+        if (typeof ymlMarkers === 'undefined') {
+            return markers
+        }
+        if (typeof ymlMarkers.height!=='undefined') {
+            markers = new Markers(ymlMarkers.height)
+        }
+        if (typeof ymlMarkers.markers!=='undefined' && ymlMarkers.markers.length>0) {
+            for (var i=0; i<ymlMarkers.markers.length; i++) {
+                var marker = ymlMarkers.markers[i]
+                markers.addMarker(new Marker(marker.text, marker.date, marker.angle))
+            }
+        }
+        return markers
+    }
+
+    function getMilestone(ymlMilestone) {
+        var milestone = new Milestone(ymlMilestone.description, ymlMilestone.dates[0].startDate, ymlMilestone.dates[0].endDate)
+        milestone.setBeginIndicator(ymlMilestone.beginIndicator)
+        milestone.setEndIndicator(ymlMilestone.endIndicator)
+        for (var i=1; i<ymlMilestone.dates.length; i++) {
+            milestone.addDateRange(ymlMilestone.dates[i].startDate, ymlMilestone.dates[i].endDate)
+        }
+        return milestone
+    }
+
+    function getMask(ymlMask) {
+        var dateRanges = []
+        if (typeof ymlMask === 'undefined') {
+            return dateRanges
+        }
+        for (var i=0; i<ymlMask.length; i++) {
+            dateRanges.push(new DateRange(ymlMask[i].startDate, ymlMask[i].endDate))
+        }
+        return dateRanges
+    }
+
+    function parseYaml(yamlString) {
+        var nativeObject = YAML.parse(yamlString)
+        var timeline = new Timeline()
+        timeline.setTopMarkers(getMarkers(nativeObject.topMarker))
+        timeline.setBottomMarkers(getMarkers(nativeObject.bottomMarker))
+        for (var i=0; i<nativeObject.phase.length; i++) {
+            var ymlPhase = nativeObject.phase[i]
+            var phase = new Phase(ymlPhase.phaseName, ProjectDisplayPattern[ymlPhase.pattern], ymlPhase.milestonHeight)
+            timeline.addPhase(phase)
+            for (var j=0; j<ymlPhase.milestone.length; j++) {
+                phase.addMilestone(getMilestone(ymlPhase.milestone[j]))
+            }
+        }
+
+        if (nativeObject.canvas.year) {
+            timeline.setYearLabel(new YearLabel())
+        }
+        if (nativeObject.canvas.month) {
+            timeline.setMonthLabel(new MonthLabel())
+        }
+        timeline.setOpaqueMask(getMask(nativeObject.mask))
+
+        var canvas = new TimelineCanvas(nativeObject.canvas.width, nativeObject.canvas.projectWidth, nativeObject.canvas.startDate,
+            nativeObject.canvas.endDate, timeline)
+        canvas.draw()    }
+
+    function readFile() {
+        var file = document.getElementById("fileInput").files[0];
+
+        if (file) {
+            var reader = new FileReader();
+
+            reader.onload = function(event) {
+                // Handle the loaded file content (text or data)
+                var content = event.target.result;
+                parseYaml(content)
+            };
+
+            reader.readAsText(file);  // You can also use readAsDataURL() for other data types
+        } else {
+            console.log("No file selected");
+        }
+    }
+</script>
+
+<input type="file" id="fileInput">
+<button onclick="readFile()">Read Selected File</button>
+
+<canvas id="main" height="1500", width="2000" style="white-space: nowrap;"></canvas>
+<div id="Test" style="position: absolute; visibility: hidden; height: auto; width: auto; white-space: nowrap;"></div>
+</body>
+</html>
+
