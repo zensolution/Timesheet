@@ -100,12 +100,15 @@
             nativeObject.canvas.endDate, timeline)
         canvas.draw()    }
 
+    function resetInput() {
+        document.getElementById("fileInput").value = ''
+    }
+
     function readFile() {
         var file = document.getElementById("fileInput").files[0];
 
         if (file) {
             var reader = new FileReader();
-
             reader.onload = function(event) {
                 // Handle the loaded file content (text or data)
                 var content = event.target.result;
@@ -114,13 +117,12 @@
 
             reader.readAsText(file);  // You can also use readAsDataURL() for other data types
         } else {
-            console.log("No file selected");
+            alert("No file selected");
         }
     }
 </script>
 
-<input type="file" id="fileInput">
-<button onclick="readFile()">Read Selected File</button>
+<input type="file" id="fileInput" onChange="readFile()" onClick="resetInput()">
 
 <canvas id="main" height="1500", width="2000" style="white-space: nowrap;"></canvas>
 <div id="Test" style="position: absolute; visibility: hidden; height: auto; width: auto; white-space: nowrap;"></div>
