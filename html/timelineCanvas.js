@@ -38,24 +38,34 @@ class TimelineCanvas {
     }
 
     drawMilestone(phase, milestone, top) {
+        const sameDayWidth = 3
         const descriptionHeight = this.drawing.measureHeight(milestone.description, phase.visualPattern.milestoneFont, this.canvas)
         const descriptionWidth = this.drawing.measureWidth(milestone.description, phase.visualPattern.milestoneFont)
 
         for (var i=0; i<milestone.beginDates.length; i++) {
             var left = this.calculateXByDate(milestone.beginDates[i])
             var right = this.calculateXByDate(milestone.endDates[i])
+            if ( left === right ) {
+                right = right + sameDayWidth
+            }
 
             this.canvas.add(this.drawing.drawRect(left, top + (phase.milestonHeight - descriptionHeight - 10) / 2, (right-left),
                 descriptionHeight + 10, phase.visualPattern.milestoneBlockBackground, phase.visualPattern.milestoneBlockRectStyle))
         }
 
-        const combindDateRange = milestone.getCombinedDateRange()
-        var timeDesc = combindDateRange.beginDate.substring(0, 5) + " - " + combindDateRange.endDate.substring(0, 5)
-        if ( new Date(combindDateRange.endDate) > this.dateRange.endDate ) {
-            timeDesc = combindDateRange.beginDate.substring(0, 5) + " - " + combindDateRange.endDate
+        const combinedDateRange = milestone.getCombinedDateRange()
+        var timeDesc = combinedDateRange.beginDate.substring(0, 5) + " - " + combinedDateRange.endDate.substring(0, 5)
+        if ( combinedDateRange.beginDate === combinedDateRange.endDate ) {
+            timeDesc = combinedDateRange.beginDate.substring(0, 5)
+        }
+        if ( new Date(combinedDateRange.endDate) > this.dateRange.endDate ) {
+            timeDesc = combinedDateRange.beginDate.substring(0, 5) + " - " + combinedDateRange.endDate
         }
 
-        var farRight = this.calculateXByDate(combindDateRange.endDate)
+        var farRight = this.calculateXByDate(combinedDateRange.endDate)
+        if ( combinedDateRange.beginDate === combinedDateRange.endDate ) {
+            farRight = farRight + sameDayWidth
+        }
         this.canvas.add(this.drawing.drawText(milestone.description, top, farRight, 2 * descriptionWidth, phase.milestonHeight,
             phase.visualPattern.milestoneFont, 'left'))
 
