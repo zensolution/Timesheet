@@ -113,7 +113,7 @@ class Timeline {
     getHeight() {
         var height = 0
         for(var i=0; i<this.phases.length; i++) {
-            height = this.phases[i].getHeight()
+            height = height + this.phases[i].getHeight()
         }
         return height
     }
